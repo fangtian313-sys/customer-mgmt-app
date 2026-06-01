@@ -4,8 +4,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.routers import auth, customers, teams, invitations, activity, relations
+from app.database import init_db
 
 settings = get_settings()
+
+# Initialize database tables on startup
+init_db()
 
 app = FastAPI(
     title=settings.APP_NAME,
