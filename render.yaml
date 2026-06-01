@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: customer-mgmt-app
+    env: docker
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./data/customer_mgmt.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SMS_PROVIDER
+        value: mock
+    disk:
+      name: app-data
+      mountPath: /app/data
+      sizeGB: 1
