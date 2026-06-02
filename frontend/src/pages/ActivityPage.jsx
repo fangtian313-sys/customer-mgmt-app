@@ -97,6 +97,20 @@ export default function ActivityPage() {
           <div>
             {data?.data?.items?.map((a) => {
               const config = actionConfig[a.action] || actionConfig.updated;
+              let description = '';
+              try {
+                const details = a.details ? JSON.parse(a.details) : null;
+                if (details?.description) {
+                  description = details.description;
+                } else if (details?.fields?.name) {
+                  description = `创建客户：${details.fields.name}`;
+                } else if (details?.changes) {
+                  const changedFields = Object.keys(details.changes);
+                  if (changedFields.length) {
+                    description = `更新了${changedFields.length}个字段`;
+                  }
+                }
+              } catch (e) { /* ignore parse error */ }
               return (
                 <div key={a.id} style={{ padding: '16px 28px', display: 'flex', alignItems: 'flex-start', gap: 16, borderBottom: '1px solid var(--slate-100)', transition: 'background 0.15s' }}
                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(248,250,252,0.6)'}
@@ -106,15 +120,9 @@ export default function ActivityPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 600, color: 'var(--slate-800)' }}>{a.user_name}</span>
                       <span className={`badge ${config.badge}`}>{config.label}</span>
-                      <span style={{ fontSize: 14, color: 'var(--slate-500)' }}>了</span>
-                      <span style={{ fontWeight: 500, color: 'var(--slate-700)' }}>
-                        {entityLabel[a.entity_type] || a.entity_type}
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--slate-700)' }}>
+                        {description || entityLabel[a.entity_type] || a.entity_type}
                       </span>
-                      {a.entity_id && (
-                        <span style={{ fontSize: 13, fontFamily: 'monospace', padding: '2px 8px', borderRadius: 4, background: 'var(--slate-100)', color: 'var(--slate-500)' }}>
-                          #{a.entity_id}
-                        </span>
-                      )}
                     </div>
                     <p style={{ fontSize: 13, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--slate-400)' }}>
                       <Clock style={{ width: 14, height: 14 }} />
