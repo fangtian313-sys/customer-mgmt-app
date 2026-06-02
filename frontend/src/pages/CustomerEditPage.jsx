@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -90,14 +90,30 @@ export default function CustomerEditPage() {
     setPendingRelations((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      name: existing?.data?.name || '', company: existing?.data?.company || '', phone: existing?.data?.phone || '',
-      email: existing?.data?.email || '', tags: existing?.data?.tags?.join(', ') || '', notes: existing?.data?.notes || '',
-      address: existing?.data?.address || '', website: existing?.data?.website || '', team_id: existing?.data?.team_id || null,
+      name: '', company: '', phone: '',
+      email: '', tags: '', notes: '',
+      address: '', website: '', team_id: null,
     },
   });
+
+  useEffect(() => {
+    if (existing?.data) {
+      reset({
+        name: existing.data.name || '',
+        company: existing.data.company || '',
+        phone: existing.data.phone || '',
+        email: existing.data.email || '',
+        tags: existing.data.tags?.join(', ') || '',
+        notes: existing.data.notes || '',
+        address: existing.data.address || '',
+        website: existing.data.website || '',
+        team_id: existing.data.team_id || null,
+      });
+    }
+  }, [existing, reset]);
 
   const onSubmit = async (data) => {
     setSaving(true); setError('');
