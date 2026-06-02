@@ -80,3 +80,25 @@ app.include_router(relations.router, prefix="/api/v1")
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+# Static file serving and SPA fallback
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+_static_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if _static_dir.exists():
+    _assets_dir = _static_dir / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = _static_dir / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        index_path = _static_dir / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
