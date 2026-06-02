@@ -50,6 +50,30 @@ def create_invitation(
     return response
 
 
+@router.get("/team/{team_id}", response_model=list[InvitationResponse])
+def list_team_invitations(
+    team_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if not team_service.check_permission(db, team_id, user.id, "editor"):
+        raise HTTPException(status_code=403, detail="权限不足")
+
+    invitations = (
+        db.query(Invitation)
+        .filter(Invitation.team_id == team_id)
+        .order_by(Invitation.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for inv in invitations:
+        resp = InvitationResponse.model_validate(inv)
+        resp.invite_link = f"/invite/{inv.code}"
+        result.append(resp)
+    return result
+
+
 @router.get("/{code}", response_model=InvitationInfo)
 def get_invitation_info(
     code: str,
@@ -125,30 +149,6 @@ def accept_invitation(
         message="成功加入团队",
         team=TeamResponse.model_validate(team),
     )
-
-
-@router.get("/team/{team_id}", response_model=list[InvitationResponse])
-def list_team_invitations(
-    team_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    if not team_service.check_permission(db, team_id, user.id, "editor"):
-        raise HTTPException(status_code=403, detail="权限不足")
-
-    invitations = (
-        db.query(Invitation)
-        .filter(Invitation.team_id == team_id)
-        .order_by(Invitation.created_at.desc())
-        .all()
-    )
-
-    result = []
-    for inv in invitations:
-        resp = InvitationResponse.model_validate(inv)
-        resp.invite_link = f"/invite/{inv.code}"
-        result.append(resp)
-    return result
 
 
 @router.delete("/{invitation_id}")

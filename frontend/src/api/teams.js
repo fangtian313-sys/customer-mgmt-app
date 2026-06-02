@@ -6,7 +6,7 @@ export const createTeam = (data) => apiClient.post('/teams/', data);
 
 export const getTeam = (id) => apiClient.get(`/teams/${id}`);
 
-export const listMembers = (teamId) => apiClient.get(`/teams/${teamId}/members/`);
+export const listMembers = (teamId) => apiClient.get(`/teams/${teamId}/members`);
 
 export const updateMemberRole = (teamId, userId, data) =>
   apiClient.put(`/teams/${teamId}/members/${userId}`, data);

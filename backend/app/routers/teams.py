@@ -54,6 +54,7 @@ def get_team(
     return detail
 
 
+@router.get("/{team_id}/members/", response_model=list[TeamMemberResponse])
 @router.get("/{team_id}/members", response_model=list[TeamMemberResponse])
 def list_members(
     team_id: int,

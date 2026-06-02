@@ -38,10 +38,10 @@ export default function TeamPage() {
   const [selectedTeam, setSelectedTeam] = useState(null);
 
   useEffect(() => {
-    if (teams?.data?.length && !selectedTeam) {
+    if (Array.isArray(teams?.data) && teams.data.length && !selectedTeam) {
       setSelectedTeam(teams.data[0].id);
     }
-  }, [teams]);
+  }, [teams, selectedTeam]);
 
   const { data: members } = useQuery({ queryKey: ['members', selectedTeam], queryFn: () => listMembers(selectedTeam), enabled: !!selectedTeam });
   const { data: invitations } = useQuery({ queryKey: ['invitations', selectedTeam], queryFn: () => listInvitations(selectedTeam), enabled: !!selectedTeam });
@@ -143,7 +143,7 @@ export default function TeamPage() {
             </h3>
           </div>
           <div style={{ padding: 28, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            {teams?.data?.map((t) => (
+            {Array.isArray(teams?.data) && teams?.data?.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setSelectedTeam(t.id)}
@@ -168,7 +168,7 @@ export default function TeamPage() {
                 {selectedTeam === t.id && <ChevronRight style={{ width: 16, height: 16 }} />}
               </button>
             ))}
-            {!teams?.data?.length && (
+            {(!Array.isArray(teams?.data) || !teams?.data?.length) && (
               <p style={{ padding: '16px 0', color: 'var(--slate-400)' }}>
                 还没有团队，创建一个开始协作吧！
               </p>
@@ -195,7 +195,7 @@ export default function TeamPage() {
                 </button>
               </div>
               <div>
-                {members?.data?.map((m) => {
+                {Array.isArray(members?.data) && members?.data?.map((m) => {
                   const config = roleConfig[m.role] || roleConfig.viewer;
                   const Icon = config.icon;
                   const isHovered = hoveredMember === m.id;
@@ -227,7 +227,7 @@ export default function TeamPage() {
                     </div>
                   );
                 })}
-                {members?.data?.map((m, i) => i < members.data.length - 1 ? (
+                {Array.isArray(members?.data) && members?.data?.map((m, i) => i < members.data.length - 1 ? (
                   <div key={`divider-${m.id}`} style={{ borderTop: '1px solid var(--slate-100)' }} />
                 ) : null)}
                 {!members?.data?.length && (
@@ -245,7 +245,7 @@ export default function TeamPage() {
                 <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--slate-800)' }}>有效邀请</h3>
               </div>
               <div>
-                {invitations?.data?.filter((i) => i.status === 'pending')?.map((inv) => {
+                {Array.isArray(invitations?.data) && invitations?.data?.filter((i) => i.status === 'pending')?.map((inv) => {
                   const isHovered = hoveredInv === inv.id;
                   return (
                     <div
@@ -284,7 +284,7 @@ export default function TeamPage() {
                     </div>
                   );
                 })}
-                {!invitations?.data?.filter((i) => i.status === 'pending')?.length && (
+                {!Array.isArray(invitations?.data) || !invitations?.data?.filter((i) => i.status === 'pending')?.length && (
                   <div style={{ padding: '48px 28px', textAlign: 'center', color: 'var(--slate-400)' }}>
                     <Link style={{ width: 48, height: 48, margin: '0 auto 12px', opacity: 0.5, display: 'block' }} />
                     <p>暂无有效邀请</p>
