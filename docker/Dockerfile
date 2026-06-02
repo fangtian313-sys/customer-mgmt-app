@@ -1,16 +1,16 @@
 FROM node:22-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm ci --prefer-offline
 COPY frontend/ ./
 RUN npm run build
 
 FROM python:3.13-slim
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir --upgrade pip
 
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
