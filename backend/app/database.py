@@ -74,7 +74,7 @@ def _seed_demo_data():
             {"name": "陈雪", "company": "悦享文化传媒", "phone": "13912345004", "email": "chenxue@yuexiang.cn",
              "tags": json.dumps(["企业"]), "address": "广州市天河区天河路300号", "website": "https://yuexiang.cn",
              "notes": "新媒体行业，有数字化转型需求", "owner_id": erhunag.id, "team_id": team.id},
-            {"name": "刘洋", "company": "", "phone": "13912345005", "email": "liuyang@gmail.com",
+            {"name": "刘明明", "company": "", "phone": "13912345005", "email": "liuyang@gmail.com",
              "tags": json.dumps(["个人", "VIP"]), "address": "杭州市西湖区文三路50号", "website": "",
              "notes": "个人投资者，对我们的产品非常感兴趣", "owner_id": admin.id, "team_id": team.id},
             {"name": "周婷", "company": "绿源环保科技", "phone": "13912345006", "email": "zhout@greensource.com",
@@ -110,6 +110,7 @@ def _seed_demo_data():
             (5, 9, "同行业", 2),
             (6, 0, "合作伙伴", 3),
             (4, 8, "朋友", 2),
+            (9, 1, "朋友", 4),
         ]
         for src, tgt, rel_type, strength in relations:
             db.add(CustomerRelation(
@@ -126,7 +127,7 @@ def _seed_demo_data():
             (xiaoming.id, team.id, "created", "customer", customers[1].id, "创建客户：李梅"),
             (erhunag.id, team.id, "created", "customer", customers[2].id, "创建客户：赵强"),
             (erhunag.id, team.id, "created", "customer", customers[3].id, "创建客户：陈雪"),
-            (admin.id, team.id, "created", "customer", customers[4].id, "创建客户：刘洋"),
+            (admin.id, team.id, "created", "customer", customers[4].id, "创建客户：刘明明"),
             (lisi.id, team.id, "created", "customer", customers[5].id, "创建客户：周婷"),
             (xiaoming.id, team.id, "updated", "customer", customers[0].id, "更新客户标签"),
             (admin.id, team.id, "created", "team", team.id, "创建团队：销售一部"),
