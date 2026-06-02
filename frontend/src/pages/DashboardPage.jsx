@@ -1,14 +1,35 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { listCustomers } from '../api/customers';
 import { listActivity } from '../api/activity';
 import { Users, Plus, TrendingUp, Clock, ArrowRight, Sparkles } from 'lucide-react';
+
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
 
 export default function DashboardPage() {
   const { data: customers } = useQuery({
     queryKey: ['customers-stats'],
     queryFn: () => listCustomers({ page: 1, per_page: 5 }),
   });
+
+  const { data: allCustomers } = useQuery({
+    queryKey: ['customers-all-stats'],
+    queryFn: () => listCustomers({ page: 1, per_page: 200 }),
+  });
+
+  const weekNewCount = useMemo(() => {
+    const items = allCustomers?.data?.items || [];
+    const weekStart = getWeekStart();
+    return items.filter(c => new Date(c.created_at) >= weekStart).length;
+  }, [allCustomers]);
 
   const { data: activity } = useQuery({
     queryKey: ['activity-recent'],
@@ -55,7 +76,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--slate-500)' }}>本周新增</p>
-              <p style={{ fontSize: 36, fontWeight: 700, color: 'var(--slate-900)', lineHeight: 1.1 }}>0</p>
+              <p style={{ fontSize: 36, fontWeight: 700, color: 'var(--slate-900)', lineHeight: 1.1 }}>{weekNewCount}</p>
             </div>
             <div style={{ width: 52, height: 52, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.05))' }}>
               <TrendingUp style={{ width: 26, height: 26, color: '#22c55e' }} />
