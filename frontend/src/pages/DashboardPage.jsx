@@ -156,7 +156,11 @@ export default function DashboardPage() {
           </Link>
         </div>
         <div>
-          {activity?.data?.items?.map((a, i) => (
+          {activity?.data?.items?.map((a, i) => {
+            let details = {};
+            try { details = typeof a.details === 'string' ? JSON.parse(a.details) : (a.details || {}); } catch {}
+            const desc = details.description || `${a.action === 'created' ? '创建' : a.action === 'updated' ? '更新' : '删除'}了 ${a.entity_type === 'customer' ? '客户' : a.entity_type === 'team' ? '团队' : a.entity_type}`;
+            return (
             <div key={a.id}
                  style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: i < activity.data.items.length - 1 ? '1px solid var(--slate-100)' : 'none', transition: 'background 0.2s' }}
                  onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'}
@@ -165,10 +169,11 @@ export default function DashboardPage() {
                 {a.action === 'created' ? '创建' : a.action === 'updated' ? '更新' : '删除'}
               </span>
               <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--slate-700)' }}>{a.user_name}</span>
-              <span style={{ fontSize: 14, color: 'var(--slate-500)' }}>了 {a.entity_type}</span>
+              <span style={{ fontSize: 14, color: 'var(--slate-500)' }}>{desc}</span>
               <span style={{ fontSize: 12, marginLeft: 'auto', color: 'var(--slate-400)' }}>{new Date(a.created_at).toLocaleString('zh-CN')}</span>
             </div>
-          ))}
+            );
+          })}
           {!activity?.data?.items?.length && (
             <div style={{ padding: '60px 32px', textAlign: 'center', color: 'var(--slate-400)' }}>
               <Clock style={{ width: 44, height: 44, margin: '0 auto 12px', opacity: 0.4 }} />
