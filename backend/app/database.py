@@ -16,8 +16,7 @@ Base = declarative_base()
 
 def init_db():
     """Create all tables if they don't exist."""
-    Base.metadata.create_all(bind=engine)
-    # Ensure data directory exists for SQLite
+    # Ensure data directory exists for SQLite BEFORE creating tables
     if "sqlite" in settings.DATABASE_URL:
         import os
         from pathlib import Path
@@ -27,6 +26,7 @@ def init_db():
         db_dir = os.path.dirname(db_path)
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir, exist_ok=True)
+    Base.metadata.create_all(bind=engine)
 
 
 # Auto-initialize on import
