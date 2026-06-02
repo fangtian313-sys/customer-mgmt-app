@@ -35,7 +35,7 @@ def create_customer(db: Session, data: CustomerCreate, user: User) -> Tuple[Cust
                 create_fields[field] = ", ".join(val)
             else:
                 create_fields[field] = str(val)
-    details = json.dumps({"fields": create_fields}) if create_fields else None
+    details = json.dumps({"fields": create_fields, "description": f"创建客户：{customer.name}"}) if create_fields else json.dumps({"description": f"创建客户：{customer.name}"})
     _log_activity(db, user.id, data.team_id, "created", "customer", customer.id, details)
 
     return customer, duplicates[0] if duplicates else None
@@ -148,7 +148,7 @@ def update_customer(
                     pass
         if str(old_val) != str(new_val):
             changes[k] = {"old": str(old_val), "new": str(new_val)}
-    details = json.dumps({"changes": changes})
+    details = json.dumps({"changes": changes, "description": f"更新客户：{customer.name}"})
     _log_activity(db, user.id, customer.team_id, "updated", "customer", customer_id, details)
 
     return customer, duplicates[0] if duplicates else None
@@ -160,10 +160,12 @@ def delete_customer(db: Session, customer_id: int, user: User) -> bool:
         return False
 
     team_id = customer.team_id
+    customer_name = customer.name
     db.delete(customer)
     db.commit()
 
-    _log_activity(db, user.id, team_id, "deleted", "customer", customer_id)
+    _log_activity(db, user.id, team_id, "deleted", "customer", customer_id,
+                  json.dumps({"description": f"删除客户：{customer_name}"}))
     return True
 
 
