@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listTeams, createTeam, listMembers, createInvitation, listInvitations, revokeInvitation } from '../api/teams';
-import { Plus, Link, Copy, Trash2, Users, Shield, ChevronRight } from 'lucide-react';
+import { listTeams, createTeam, listMembers, createInvitation, listInvitations, revokeInvitation, updateMemberRole, removeMember } from '../api/teams';
+import { useAuth } from '../context/AuthContext';
+import { Plus, Link, Copy, Trash2, Users, Shield, ChevronRight, ChevronDown } from 'lucide-react';
 
 const cardStyle = {
   background: 'white',
@@ -26,6 +27,7 @@ const listItemStyle = {
 
 export default function TeamPage() {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [showInvite, setShowInvite] = useState(false);
@@ -33,6 +35,7 @@ export default function TeamPage() {
   const [inviteLink, setInviteLink] = useState('');
   const [hoveredMember, setHoveredMember] = useState(null);
   const [hoveredInv, setHoveredInv] = useState(null);
+  const [editingRoleMember, setEditingRoleMember] = useState(null);
 
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: () => listTeams() });
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -69,6 +72,24 @@ export default function TeamPage() {
       queryClient.invalidateQueries({ queryKey: ['invitations'] });
     }
   });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ userId, role }) => updateMemberRole(selectedTeam, userId, { role }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      setEditingRoleMember(null);
+    }
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: (userId) => removeMember(selectedTeam, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+    }
+  });
+
+  const selectedTeamData = Array.isArray(teams?.data) ? teams.data.find((t) => t.id === selectedTeam) : null;
+  const isOwner = selectedTeamData?.owner_id === currentUser?.id;
 
   const handleCopyLink = (link) => {
     navigator.clipboard.writeText(link);
@@ -199,12 +220,15 @@ export default function TeamPage() {
                   const config = roleConfig[m.role] || roleConfig.viewer;
                   const Icon = config.icon;
                   const isHovered = hoveredMember === m.id;
+                  const isMemberOwner = m.role === 'owner';
+                  const canEdit = isOwner && !isMemberOwner;
+                  const isEditing = editingRoleMember === m.id;
                   return (
                     <div
                       key={m.id}
-                      style={{ ...listItemStyle, background: isHovered ? 'rgba(248,250,252,0.6)' : 'transparent' }}
+                      style={{ ...listItemStyle, background: isHovered ? 'rgba(248,250,252,0.6)' : 'transparent', position: 'relative' }}
                       onMouseEnter={() => setHoveredMember(m.id)}
-                      onMouseLeave={() => setHoveredMember(null)}
+                      onMouseLeave={() => { setHoveredMember(null); setEditingRoleMember(null); }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{
@@ -220,10 +244,60 @@ export default function TeamPage() {
                           <p style={{ fontSize: 13, color: 'var(--slate-400)' }}>{m.user_phone}</p>
                         </div>
                       </div>
-                      <span className={`badge ${config.badge}`} style={{ padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        {Icon && <Icon style={{ width: 14, height: 14 }} />}
-                        {config.label}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {canEdit ? (
+                          <div style={{ position: 'relative' }}>
+                            <button
+                              onClick={() => setEditingRoleMember(isEditing ? null : m.id)}
+                              className={`badge ${config.badge}`}
+                              style={{ padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer', border: 'none', fontSize: 13 }}
+                            >
+                              {config.label}
+                              <ChevronDown style={{ width: 12, height: 12 }} />
+                            </button>
+                            {isEditing && (
+                              <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 20, background: 'white', borderRadius: 12, border: '1px solid var(--slate-200)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', minWidth: 140, overflow: 'hidden' }}>
+                                {['editor', 'viewer'].map((role) => (
+                                  <button
+                                    key={role}
+                                    onClick={() => updateRoleMutation.mutate({ userId: m.user_id, role })}
+                                    disabled={updateRoleMutation.isPending}
+                                    style={{
+                                      width: '100%', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8,
+                                      border: 'none', background: m.role === role ? 'var(--slate-50)' : 'white',
+                                      cursor: 'pointer', fontSize: 13, fontWeight: 500, color: 'var(--slate-700)',
+                                      transition: 'background 0.15s',
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--slate-50)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = m.role === role ? 'var(--slate-50)' : 'white'}
+                                  >
+                                    <span className={`badge ${roleConfig[role].badge}`} style={{ padding: '2px 8px', fontSize: 12 }}>
+                                      {roleConfig[role].label}
+                                    </span>
+                                    {m.role === role && <span style={{ marginLeft: 'auto', color: 'var(--primary)', fontSize: 12 }}>✓</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className={`badge ${config.badge}`} style={{ padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            {Icon && <Icon style={{ width: 14, height: 14 }} />}
+                            {config.label}
+                          </span>
+                        )}
+                        {canEdit && (
+                          <button
+                            onClick={() => { if (confirm(`确定移除 ${m.user_name} 吗？`)) removeMemberMutation.mutate(m.user_id); }}
+                            style={{ padding: 6, borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--slate-400)', transition: 'all 0.15s', opacity: isHovered ? 1 : 0 }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-light)'; e.currentTarget.style.color = 'var(--danger)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--slate-400)'; }}
+                            title="移除成员"
+                          >
+                            <Trash2 style={{ width: 14, height: 14 }} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
