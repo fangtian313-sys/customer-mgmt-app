@@ -45,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-5 py-10 sm:px-8">
       {/* 背景渐变 */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
       
@@ -82,8 +82,8 @@ export default function LoginPage() {
         </div>
 
         {/* 玻璃态卡片 */}
-        <div className="glass-effect rounded-2xl p-8 shadow-2xl backdrop-blur-xl"
-             style={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+        <div className="glass-effect rounded-2xl shadow-2xl backdrop-blur-xl"
+             style={{ background: 'rgba(255, 255, 255, 0.95)', padding: '40px 36px' }}>
           {error && (
             <div className="mb-6 p-4 rounded-xl flex items-center gap-3 animate-fade-in"
                  style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>
@@ -94,7 +94,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">手机号</label>
               <input
