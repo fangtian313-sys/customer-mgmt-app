@@ -22,13 +22,18 @@ export default function DashboardPage() {
 
   const { data: allCustomers } = useQuery({
     queryKey: ['customers-all-stats'],
-    queryFn: () => listCustomers({ page: 1, per_page: 200 }),
+    queryFn: () => listCustomers({ page: 1, per_page: 100 }),
   });
 
   const weekNewCount = useMemo(() => {
-    const items = allCustomers?.data?.items || [];
+    const items = allCustomers?.data?.items || allCustomers?.data || [];
     const weekStart = getWeekStart();
-    return items.filter(c => new Date(c.created_at) >= weekStart).length;
+    return items.filter(c => {
+      const created = new Date(c.created_at);
+      // API returns UTC time, add 'Z' suffix if missing for correct parsing
+      const utcCreated = c.created_at.endsWith('Z') || c.created_at.includes('+') ? created : new Date(c.created_at + 'Z');
+      return utcCreated >= weekStart;
+    }).length;
   }, [allCustomers]);
 
   const { data: activity } = useQuery({
